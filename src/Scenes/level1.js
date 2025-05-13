@@ -17,26 +17,41 @@ class level1 extends Phaser.Scene{
         this.my.sprite.bullet = [];   
         this.maxBullets = 10;           // Don't create more than this many bullets
 
+        this.my.sprite.emittedBullet = [];
+
         this.myScore = 0;
 
         this.my.sprite.sedans =[]
-        this.maxSedans = 10;
+        this.maxSedans = 7;
+
+        this.my.sprite.sedanBlue = []
+        this.maxSedanBlue = 3;
+
+        this.my.sprite.tow = []
+        this.maxTow = 4;
 
         this.myScore = 0;
-        
+
+        this.playerHealth = 10;
+
         this.waveOne = true;
         this.waveTwo = false;
         this.waveThree = false;
 
-        this.partOne = true;
-        this.partTwo = false;
-        this.partThree = false
-
-        this.gameEnd = false;
+        this.currentWave = 0;
     }
 
-    init(){
+    init_game(){
         this.myScore = 0;
+        this.my.sprite.bullet = [];
+        this.my.sprite.sedans = [];
+        this.my.sprite.sedanBlue = [];
+        this.my.sprite.tow = [];
+        this.waveOne = true;
+        this.partOne = true;
+        this.currentWave = 0;
+        this.playerHealth = 10;
+        this.my.sprite.emittedBullet = [];
     }
 
     preload(){
@@ -54,11 +69,15 @@ class level1 extends Phaser.Scene{
         this.load.image("whitePuff02", "whitePuff02.png");
         this.load.image("whitePuff03", "whitePuff03.png");
 
-        this.load.image("sedan","sedan.png")
+        this.load.image("sedan","sedan.png");
+        this.load.image("sedanBlue","sedan_blue.png");
+        this.load.image("tow","towtruck.png");
+        this.load.image("tire","tire.png");
 
     }
 
     create(){
+        this.init_game();
 
         let my = this.my;
 
@@ -69,6 +88,7 @@ class level1 extends Phaser.Scene{
         this.start = this.input.keyboard.addKey("Q");
 
         my.text.score = this.add.bitmapText(10, 0, "rocketSquare", "Score " + this.myScore);
+        my.text.lives = this.add.bitmapText(config.width-200, 0, "rocketSquare", "Lives: " + this.playerHealth);
 
         document.getElementById('description').innerHTML = '<h2>Array Boom.js</h2><br>W: Up// S: Down // Space: fire/emit'
 
@@ -78,6 +98,13 @@ class level1 extends Phaser.Scene{
             callbackScope: this, // The context in which the callback function is executed
             loop: false // Whether the timer should repeat indefinitely
           });
+
+        this.waveDelay = this.time.addEvent({
+            delay: 20000, // Delay in milliseconds (1000 = 1 second)
+            callback: this.nextWave(), // The function to call when the timer fires
+            callbackScope: this, // The context in which the callback function is executed
+            loop: true // Whether the timer should repeat indefinitely
+        });
           
 /*
         my.sprite.sedan = this.add.sprite(game.config.width-200,500,"vehicles","sedan.png");
@@ -135,17 +162,16 @@ class level1 extends Phaser.Scene{
         }
 
         // Code for the first wave
-        if(this.waveOne){
+        if(true){
             
 
-            if(this.partOne){
-                if (my.sprite.sedans.length < this.maxSedans) {
-                    my.sprite.sedans.push(this.add.sprite(
-                        game.config.width+100, Math.random()*config.height, "sedan")
-                    );
-                }
-                my.sprite.sedans = my.sprite.sedans.filter((sedans) => sedans.x+400 >  (sedans.displayWidth/2));
+            if (my.sprite.sedans.length < this.maxSedans) {
+                my.sprite.sedans.push(this.add.sprite(
+                    game.config.width+100, Math.random()*config.height, "sedan")
+                );
             }
+                my.sprite.sedans = my.sprite.sedans.filter((sedans) => sedans.x+400 >  (sedans.displayWidth/2));
+
 
             for(let sedan of my.sprite.sedans){
                 sedan.setScale(2.5);
@@ -154,10 +180,94 @@ class level1 extends Phaser.Scene{
                 this.vehicleCollision(my.sprite.player,sedan);
             }
 
+            // Enemy 2
+            if (my.sprite.sedanBlue.length < this.maxSedanBlue) {
+                my.sprite.sedanBlue.push(this.add.sprite(
+                    game.config.width+700, Math.random()*config.height, "sedanBlue")
+                );
+            }
+            for(let sedan of my.sprite.sedanBlue){
+                sedan.setScale(2.5);
+                sedan.scorePoints = 50;
+                if(sedan.x > config.width-400){
+                    sedan.x -= 18;
+                }
+                if(sedan.x <= config.width-400 && sedan.x > config.width-800){
+                    sedan.x -= 10;
+                    sedan.y += 3;
+                }
+                if(sedan.x <= config.width-800 && sedan.x > config.width-1200){
+                    sedan.x -= 15;
+                    sedan.y -= 5;
+                }
+                else{
+                    sedan.x -= 15;
+                }
+                this.vehicleCollision(my.sprite.player,sedan);
+            }
+            my.sprite.sedanBlue = my.sprite.sedanBlue.filter((sedanBlue) => sedanBlue.x+400 >  (sedanBlue.displayWidth/2));
+
+            // Enemy 3
+            if (my.sprite.tow.length < this.maxTow) {
+                my.sprite.tow.push(this.add.sprite(
+                    game.config.width+500, Math.random()*config.height, "tow")
+                );
+            }
+            my.sprite.tow = my.sprite.tow.filter((tow) => tow.x+400 >  (tow.displayWidth/2));
+            for(let tow of my.sprite.tow){
+                tow.setScale(2.5);
+                tow.scorePoints = 100;
+                tow.x -= 5;
+                
+                if(tow.x == config.width-100){
+                    console.log("added")
+                    my.sprite.emittedBullet.push(this.add.sprite(
+                        tow.x, tow.y, "tire")
+                    );
+                }
+                if(tow.x == config.width-300){
+                    my.sprite.emittedBullet.push(this.add.sprite(
+                        tow.x, tow.y, "tire")
+                    );
+                }
+                if(tow.x <= config.width -500 && tow.x > config.width-700){
+                    tow.y +=3;
+                    if(tow.x == config.width-600){
+                        my.sprite.emittedBullet.push(this.add.sprite(
+                            tow.x, tow.y, "tire")
+                        );
+                    }
+                }
+                if(tow.x <= config.width-700 && tow.x > config.width-900){
+                    tow.y -=4;
+                    if(tow.x == config.width-800){
+                        my.sprite.emittedBullet.push(this.add.sprite(
+                            tow.x, tow.y, "tire")
+                        );
+                    }
+                }
+                this.vehicleCollision(my.sprite.player,tow);
+            }
+
+            for(let tire of my.sprite.emittedBullet){
+                tire.setScale(2.5);
+                tire.x -= 20;
+                tire.scorepoints = 10;
+                this.vehicleCollision(my.sprite.player,tire);
+            }
+            my.sprite.emittedBullet = my.sprite.emittedBullet.filter((emittedBullet) => emittedBullet.x+400 >  (emittedBullet .displayWidth/2));
+
+
             //Handle bullet collisions with all vehicles
             for (let bullet of my.sprite.bullet) {
             for(let sedan of my.sprite.sedans){
                 this.bulletCollision(bullet,sedan);
+            }
+            for(let sedan of my.sprite.sedanBlue){
+                this.bulletCollision(bullet,sedan);
+            }
+            for(let tow of my.sprite.tow){
+                this.bulletCollision(bullet,tow);
             }
             this.groupBullet(bullet,my.sprite.trailer,my.sprite.cabin,this.hit1,this.hit2)
             }
@@ -199,11 +309,17 @@ class level1 extends Phaser.Scene{
         }
 
         my.sprite.player.update();
-        console.log(this.timerEvent.getElapsed())
-        if(this.timerEvent.getElapsed() >= 3000){
-            this.scene.start("End",{Score: this.myScore});
+        if(this.timerEvent.getElapsed() >= 30000){
+            this.scene.start("End");
+        }
+
+        if(this.playerHealth == 0){
+            this.scene.start("End");
         }
     }
+
+
+
 
 
     vehicleCollision(player,vehicle){
@@ -216,6 +332,8 @@ class level1 extends Phaser.Scene{
             // Update score
             this.myScore -= vehicle.scorePoints;
             this.updateScore();
+            this.playerHealth -= 1;
+            this.updateLives();
             //this.updateScore();
             // Have new vehicle appear after end of animation
             this.puff.on(Phaser.Animations.Events.ANIMATION_COMPLETE, () => {
@@ -275,6 +393,12 @@ class level1 extends Phaser.Scene{
     updateScore() {
         let my = this.my;
         my.text.score.setText("Score " + this.myScore);
+    }
+
+    // Life updater
+    updateLives(){
+        let my = this.my;
+        my.text.lives.setText("Lives: "+this.playerHealth);
     }
 
     // Collision checker for pairs of objects
@@ -343,6 +467,8 @@ class level1 extends Phaser.Scene{
             vehicle1.x = -150
             this.myScore -= vehicle1.scorePoints;
             this.updateScore();
+            this.playerHealth -=1;
+            this.updateLives();
         }
         // Checks if object two was hit
         if(this.collides(player,vehicle2)){
@@ -352,6 +478,8 @@ class level1 extends Phaser.Scene{
             vehicle2.x = -150
             this.myScore -= vehicle2.scorePoints;
             this.updateScore();
+            this.playerHealth -=1;
+            this.updateLives();
         }
 
     }
@@ -360,4 +488,16 @@ class level1 extends Phaser.Scene{
         // Update the timer display or perform other actions here
         console.log('Timer event fired!');
       }
+
+    nextWave(){
+        if(this.currentWave == 0){
+            this.waveOne = false;
+            this.waveTwo = true;
+        }
+        if(this.currentWave == 1){
+            this.waveTwo = false;
+            this.waveThree = true;
+        }
+        this.currentWave +=1;
+    }
 }
