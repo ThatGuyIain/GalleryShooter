@@ -5,7 +5,7 @@ class end extends Phaser.Scene{
     }
 
     create(){
-        this.add.text((config.width/2)-500,(config.height/2)-150, "Your score:"+this.score, {
+        this.add.text((config.width/2)-75,(config.height/2)-150, "Game Over", {
             fontFamily: 'Times, serif',
             fontSize: 50,
             wordWrap: {

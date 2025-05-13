@@ -25,10 +25,10 @@ class level1 extends Phaser.Scene{
         this.maxSedans = 7;
 
         this.my.sprite.sedanBlue = []
-        this.maxSedanBlue = 3;
+        this.maxSedanBlue = 5;
 
         this.my.sprite.tow = []
-        this.maxTow = 4;
+        this.maxTow = 6;
 
         this.myScore = 0;
 
@@ -117,7 +117,7 @@ class level1 extends Phaser.Scene{
 
         my.sprite.cabin = this.add.sprite(game.config.width-150,500,"vehicles","truckcabin_vintage.png");
         my.sprite.cabin.setScale(2.5);
-        my.sprite.cabin.setPoints = 25;
+        my.sprite.cabin.scorePoints = 60;
 
         /*
         my.sprite.police = this.add.sprite(game.config.width, game.config.height/2, "vehicles","police.png");
@@ -190,14 +190,14 @@ class level1 extends Phaser.Scene{
                 sedan.setScale(2.5);
                 sedan.scorePoints = 50;
                 if(sedan.x > config.width-400){
-                    sedan.x -= 18;
+                    sedan.x -= 15;
                 }
                 if(sedan.x <= config.width-400 && sedan.x > config.width-800){
-                    sedan.x -= 10;
+                    sedan.x -= 8;
                     sedan.y += 3;
                 }
                 if(sedan.x <= config.width-800 && sedan.x > config.width-1200){
-                    sedan.x -= 15;
+                    sedan.x -= 10;
                     sedan.y -= 5;
                 }
                 else{
@@ -210,14 +210,14 @@ class level1 extends Phaser.Scene{
             // Enemy 3
             if (my.sprite.tow.length < this.maxTow) {
                 my.sprite.tow.push(this.add.sprite(
-                    game.config.width+500, Math.random()*config.height, "tow")
+                    game.config.width+300, Math.random()*config.height, "tow")
                 );
             }
             my.sprite.tow = my.sprite.tow.filter((tow) => tow.x+400 >  (tow.displayWidth/2));
             for(let tow of my.sprite.tow){
                 tow.setScale(2.5);
                 tow.scorePoints = 100;
-                tow.x -= 5;
+                tow.x -= 7;
                 
                 if(tow.x == config.width-100){
                     console.log("added")
@@ -252,7 +252,7 @@ class level1 extends Phaser.Scene{
             for(let tire of my.sprite.emittedBullet){
                 tire.setScale(2.5);
                 tire.x -= 20;
-                tire.scorepoints = 10;
+                tire.scorePoints = 10;
                 this.vehicleCollision(my.sprite.player,tire);
             }
             my.sprite.emittedBullet = my.sprite.emittedBullet.filter((emittedBullet) => emittedBullet.x+400 >  (emittedBullet .displayWidth/2));
@@ -312,6 +312,7 @@ class level1 extends Phaser.Scene{
         if(this.timerEvent.getElapsed() >= 30000){
             this.scene.start("End");
         }
+        my.text.timeRemaining = this.add.bitmapText((config.width/2)-10, 10, "rocketSquare",30-Math.round(this.timerEvent.getElapsedSeconds()));
 
         if(this.playerHealth == 0){
             this.scene.start("End");
@@ -334,7 +335,6 @@ class level1 extends Phaser.Scene{
             this.updateScore();
             this.playerHealth -= 1;
             this.updateLives();
-            //this.updateScore();
             // Have new vehicle appear after end of animation
             this.puff.on(Phaser.Animations.Events.ANIMATION_COMPLETE, () => {
                 vehicle.visible = true;
